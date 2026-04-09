@@ -1,6 +1,7 @@
 package com.places.booking.controller;
 
 import com.places.booking.dto.BookingDtos;
+import com.places.booking.dto.PagedResponse;
 import com.places.booking.service.TeamService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,8 +29,17 @@ public class TeamController {
     }
 
     @GetMapping
-    public List<BookingDtos.TeamResponse> getTeams() {
-        return teamService.findAll();
+    public PagedResponse<BookingDtos.TeamResponse> getTeams(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return teamService.findAll(search, page, size);
+    }
+
+    @GetMapping("/{id}")
+    public BookingDtos.TeamResponse getTeam(@PathVariable Long id) {
+        return teamService.findById(id);
     }
 
     @PostMapping
@@ -46,5 +57,27 @@ public class TeamController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTeam(@PathVariable Long id) {
         teamService.delete(id);
+    }
+
+    // ---- Members nested under a team ----
+
+    @GetMapping("/{teamId}/members")
+    public List<BookingDtos.TeamMemberResponse> getMembers(@PathVariable Long teamId) {
+        return teamService.getMembers(teamId);
+    }
+
+    @PostMapping("/{teamId}/members")
+    @ResponseStatus(HttpStatus.CREATED)
+    public BookingDtos.TeamMemberResponse addMember(
+            @PathVariable Long teamId,
+            @Valid @RequestBody BookingDtos.TeamMemberRequest request
+    ) {
+        return teamService.addMember(teamId, request);
+    }
+
+    @DeleteMapping("/{teamId}/members/{memberId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeMember(@PathVariable Long teamId, @PathVariable Long memberId) {
+        teamService.removeMember(teamId, memberId);
     }
 }

@@ -1,6 +1,8 @@
 package com.places.booking.controller;
 
 import com.places.booking.dto.BookingDtos;
+import com.places.booking.dto.PagedResponse;
+import com.places.booking.service.DeskService;
 import com.places.booking.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,21 +17,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/rooms")
 public class RoomController {
 
     private final RoomService roomService;
+    private final DeskService deskService;
 
-    public RoomController(RoomService roomService) {
+    public RoomController(RoomService roomService, DeskService deskService) {
         this.roomService = roomService;
+        this.deskService = deskService;
     }
 
     @GetMapping
-    public List<BookingDtos.RoomResponse> getRooms(@RequestParam(required = false) String search) {
-        return roomService.findAll(search);
+    public PagedResponse<BookingDtos.RoomResponse> getRooms(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy
+    ) {
+        return roomService.findAll(search, page, size, sortBy);
     }
 
     @GetMapping("/{id}")
@@ -52,5 +59,46 @@ public class RoomController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRoom(@PathVariable Long id) {
         roomService.delete(id);
+    }
+
+    // ---- Desks nested under a room ----
+
+    @GetMapping("/{roomId}/desks")
+    public PagedResponse<BookingDtos.DeskResponse> getDesks(
+            @PathVariable Long roomId,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return deskService.findByRoom(roomId, search, page, size);
+    }
+
+    @GetMapping("/{roomId}/desks/{deskId}")
+    public BookingDtos.DeskResponse getDesk(@PathVariable Long roomId, @PathVariable Long deskId) {
+        return deskService.findById(roomId, deskId);
+    }
+
+    @PostMapping("/{roomId}/desks")
+    @ResponseStatus(HttpStatus.CREATED)
+    public BookingDtos.DeskResponse createDesk(
+            @PathVariable Long roomId,
+            @Valid @RequestBody BookingDtos.DeskRequest request
+    ) {
+        return deskService.create(roomId, request);
+    }
+
+    @PutMapping("/{roomId}/desks/{deskId}")
+    public BookingDtos.DeskResponse updateDesk(
+            @PathVariable Long roomId,
+            @PathVariable Long deskId,
+            @Valid @RequestBody BookingDtos.DeskRequest request
+    ) {
+        return deskService.update(roomId, deskId, request);
+    }
+
+    @DeleteMapping("/{roomId}/desks/{deskId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDesk(@PathVariable Long roomId, @PathVariable Long deskId) {
+        deskService.delete(roomId, deskId);
     }
 }

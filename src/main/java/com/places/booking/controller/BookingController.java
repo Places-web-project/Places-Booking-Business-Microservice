@@ -1,6 +1,7 @@
 package com.places.booking.controller;
 
 import com.places.booking.dto.BookingDtos;
+import com.places.booking.dto.PagedResponse;
 import com.places.booking.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
@@ -28,8 +27,19 @@ public class BookingController {
     }
 
     @GetMapping
-    public List<BookingDtos.BookingResponse> getBookings(@RequestParam(required = false) String status) {
-        return bookingService.findAll(status);
+    public PagedResponse<BookingDtos.BookingResponse> getBookings(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long roomId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return bookingService.findAll(status, userId, roomId, page, size);
+    }
+
+    @GetMapping("/{id}")
+    public BookingDtos.BookingResponse getBooking(@PathVariable Long id) {
+        return bookingService.findById(id);
     }
 
     @PostMapping
