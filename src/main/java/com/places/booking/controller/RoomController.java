@@ -6,6 +6,7 @@ import com.places.booking.service.DeskService;
 import com.places.booking.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,17 +47,20 @@ public class RoomController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public BookingDtos.RoomResponse createRoom(@Valid @RequestBody BookingDtos.RoomRequest request) {
         return roomService.create(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BookingDtos.RoomResponse updateRoom(@PathVariable Long id, @Valid @RequestBody BookingDtos.RoomRequest request) {
         return roomService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteRoom(@PathVariable Long id) {
         roomService.delete(id);
     }
@@ -80,6 +84,7 @@ public class RoomController {
 
     @PostMapping("/{roomId}/desks")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public BookingDtos.DeskResponse createDesk(
             @PathVariable Long roomId,
             @Valid @RequestBody BookingDtos.DeskRequest request
@@ -88,6 +93,7 @@ public class RoomController {
     }
 
     @PutMapping("/{roomId}/desks/{deskId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public BookingDtos.DeskResponse updateDesk(
             @PathVariable Long roomId,
             @PathVariable Long deskId,
@@ -98,6 +104,7 @@ public class RoomController {
 
     @DeleteMapping("/{roomId}/desks/{deskId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteDesk(@PathVariable Long roomId, @PathVariable Long deskId) {
         deskService.delete(roomId, deskId);
     }

@@ -5,6 +5,7 @@ import com.places.booking.dto.PagedResponse;
 import com.places.booking.service.BookingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,17 +50,20 @@ public class BookingController {
     }
 
     @PutMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public BookingDtos.BookingResponse approve(@PathVariable Long id) {
         return bookingService.approve(id);
     }
 
     @PutMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public BookingDtos.BookingResponse reject(@PathVariable Long id) {
         return bookingService.reject(id);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public void deleteBooking(@PathVariable Long id) {
         bookingService.delete(id);
     }

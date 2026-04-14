@@ -5,6 +5,7 @@ import com.places.booking.dto.PagedResponse;
 import com.places.booking.service.TeamService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,17 +45,20 @@ public class TeamController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public BookingDtos.TeamResponse createTeam(@Valid @RequestBody BookingDtos.TeamRequest request) {
         return teamService.create(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public BookingDtos.TeamResponse updateTeam(@PathVariable Long id, @Valid @RequestBody BookingDtos.TeamRequest request) {
         return teamService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public void deleteTeam(@PathVariable Long id) {
         teamService.delete(id);
     }
@@ -68,6 +72,7 @@ public class TeamController {
 
     @PostMapping("/{teamId}/members")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public BookingDtos.TeamMemberResponse addMember(
             @PathVariable Long teamId,
             @Valid @RequestBody BookingDtos.TeamMemberRequest request
@@ -77,6 +82,7 @@ public class TeamController {
 
     @DeleteMapping("/{teamId}/members/{memberId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public void removeMember(@PathVariable Long teamId, @PathVariable Long memberId) {
         teamService.removeMember(teamId, memberId);
     }
