@@ -31,6 +31,19 @@ public class JwtService {
         return toRoleAuthorities(roles);
     }
 
+    public Long extractUserId(String token) {
+        Claims claims = parseClaims(token);
+        Object userIdObj = claims.get("userId");
+
+        if (userIdObj instanceof Number number) {
+            return number.longValue();
+        }
+        if (userIdObj instanceof String value && !value.isBlank()) {
+            return parseLongQuietly(value.trim());
+        }
+        return parseLongQuietly(claims.getSubject());
+    }
+
     private Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(signingKey())
@@ -55,5 +68,16 @@ public class JwtService {
                 .filter(value -> !value.isEmpty())
                 .map(value -> value.startsWith("ROLE_") ? value : "ROLE_" + value)
                 .collect(Collectors.toSet());
+    }
+
+    private Long parseLongQuietly(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 }
