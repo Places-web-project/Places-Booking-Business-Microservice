@@ -64,7 +64,16 @@ public class BookingDtos {
             Long teamId,
             LocalDateTime startsAt,
             LocalDateTime endsAt,
-            BookingStatus status
+            BookingStatus status,
+            LocalDateTime checkedInAt
+    ) {
+    }
+
+    public record AttendanceSummaryResponse(
+            long totalEligibleBookings,
+            long checkedInCount,
+            long missedCheckinsCount,
+            boolean isFlagged
     ) {
     }
 }

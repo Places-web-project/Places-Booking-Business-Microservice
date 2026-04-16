@@ -61,6 +61,16 @@ public class BookingController {
         return bookingService.reject(id);
     }
 
+    @PutMapping("/{id}/check-in")
+    public BookingDtos.BookingResponse checkIn(@PathVariable Long id) {
+        return bookingService.checkIn(id);
+    }
+
+    @GetMapping("/me/attendance-summary")
+    public BookingDtos.AttendanceSummaryResponse getAttendanceSummary() {
+        return bookingService.getAttendanceSummaryForCurrentUser();
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")

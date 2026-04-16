@@ -15,21 +15,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class BookingService {
+    private static final int FLAGGED_MISSED_CHECKINS_THRESHOLD = 5;
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
     private final TeamRepository teamRepository;
+    private final CurrentUserService currentUserService;
 
     public BookingService(
             BookingRepository bookingRepository,
             RoomRepository roomRepository,
-            TeamRepository teamRepository
+            TeamRepository teamRepository,
+            CurrentUserService currentUserService
     ) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.teamRepository = teamRepository;
+        this.currentUserService = currentUserService;
     }
 
     public PagedResponse<BookingDtos.BookingResponse> findAll(String status, Long userId, Long roomId, int page, int size) {
@@ -95,6 +101,61 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    public BookingDtos.BookingResponse checkIn(Long id) {
+        Long currentUserId = currentUserService.requireUserId();
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        if (!booking.getUserId().equals(currentUserId)) {
+            throw new IllegalArgumentException("You can only check in to your own bookings");
+        }
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            throw new IllegalArgumentException("Only APPROVED bookings can be checked in");
+        }
+        if (booking.getCheckedInAt() != null) {
+            return toResponse(booking);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(booking.getStartsAt())) {
+            throw new IllegalArgumentException("Check-in is only available after the booking starts");
+        }
+        if (now.isAfter(booking.getEndsAt())) {
+            throw new IllegalArgumentException("Check-in is no longer available after the booking ends");
+        }
+
+        booking.setCheckedInAt(now);
+        return toResponse(bookingRepository.save(booking));
+    }
+
+    public BookingDtos.AttendanceSummaryResponse getAttendanceSummaryForCurrentUser() {
+        Long currentUserId = currentUserService.requireUserId();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime from = now.minusDays(30);
+
+        long totalEligibleBookings = bookingRepository.countByUserIdAndStatusAndEndsAtBetween(
+                currentUserId,
+                BookingStatus.APPROVED,
+                from,
+                now
+        );
+        long checkedInCount = bookingRepository.countByUserIdAndStatusAndEndsAtBetweenAndCheckedInAtIsNotNull(
+                currentUserId,
+                BookingStatus.APPROVED,
+                from,
+                now
+        );
+        long missedCheckinsCount = Math.max(totalEligibleBookings - checkedInCount, 0);
+        boolean isFlagged = missedCheckinsCount >= FLAGGED_MISSED_CHECKINS_THRESHOLD;
+
+        return new BookingDtos.AttendanceSummaryResponse(
+                totalEligibleBookings,
+                checkedInCount,
+                missedCheckinsCount,
+                isFlagged
+        );
+    }
+
     public void delete(Long id) {
         if (!bookingRepository.existsById(id)) {
             throw new IllegalArgumentException("Booking not found");
@@ -111,7 +172,8 @@ public class BookingService {
                 booking.getTeam() == null ? null : booking.getTeam().getId(),
                 booking.getStartsAt(),
                 booking.getEndsAt(),
-                booking.getStatus()
+                booking.getStatus(),
+                booking.getCheckedInAt()
         );
     }
 }
