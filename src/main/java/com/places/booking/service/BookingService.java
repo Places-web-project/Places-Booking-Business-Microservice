@@ -14,10 +14,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
+@Transactional(readOnly = true)
 public class BookingService {
     private static final int FLAGGED_MISSED_CHECKINS_THRESHOLD = 5;
 
@@ -60,6 +62,7 @@ public class BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found")));
     }
 
+    @Transactional
     public BookingDtos.BookingResponse create(BookingDtos.BookingRequest request) {
         if (request.endsAt().isBefore(request.startsAt()) || request.endsAt().isEqual(request.startsAt())) {
             throw new IllegalArgumentException("End time must be after start time");
@@ -81,6 +84,7 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    @Transactional
     public BookingDtos.BookingResponse approve(Long id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
@@ -91,6 +95,7 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    @Transactional
     public BookingDtos.BookingResponse reject(Long id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
@@ -101,6 +106,7 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    @Transactional
     public BookingDtos.BookingResponse checkIn(Long id) {
         Long currentUserId = currentUserService.requireUserId();
         Booking booking = bookingRepository.findById(id)
@@ -156,6 +162,7 @@ public class BookingService {
         );
     }
 
+    @Transactional
     public void delete(Long id) {
         if (!bookingRepository.existsById(id)) {
             throw new IllegalArgumentException("Booking not found");
