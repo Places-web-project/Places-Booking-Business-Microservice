@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 @Service
 @Transactional(readOnly = true)
@@ -27,17 +28,20 @@ public class BookingService {
     private final RoomRepository roomRepository;
     private final TeamRepository teamRepository;
     private final CurrentUserService currentUserService;
+    private final LoyaltyService loyaltyService;
 
     public BookingService(
             BookingRepository bookingRepository,
             RoomRepository roomRepository,
             TeamRepository teamRepository,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            LoyaltyService loyaltyService
     ) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.teamRepository = teamRepository;
         this.currentUserService = currentUserService;
+        this.loyaltyService = loyaltyService;
     }
 
     public PagedResponse<BookingDtos.BookingResponse> findAll(String status, Long userId, Long roomId, int page, int size) {
@@ -79,9 +83,24 @@ public class BookingService {
         booking.setTeam(team);
         booking.setStartsAt(request.startsAt());
         booking.setEndsAt(request.endsAt());
-        booking.setStatus(BookingStatus.PENDING);
+        booking.setStatus(initialStatusForRoom(room));
 
         return toResponse(bookingRepository.save(booking));
+    }
+
+    /**
+     * Desk bookings are confirmed immediately. Meeting rooms and other shared spaces require manager approval.
+     */
+    private static BookingStatus initialStatusForRoom(Room room) {
+        String raw = room.getRoomType();
+        if (raw == null || raw.isBlank()) {
+            return BookingStatus.PENDING;
+        }
+        String t = raw.trim().toUpperCase(Locale.ROOT);
+        if ("DESK".equals(t)) {
+            return BookingStatus.APPROVED;
+        }
+        return BookingStatus.PENDING;
     }
 
     @Transactional
@@ -131,7 +150,9 @@ public class BookingService {
         }
 
         booking.setCheckedInAt(now);
-        return toResponse(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+        loyaltyService.recordDeskCheckinEarnIfApplicable(saved);
+        return toResponse(saved);
     }
 
     public BookingDtos.AttendanceSummaryResponse getAttendanceSummaryForCurrentUser() {

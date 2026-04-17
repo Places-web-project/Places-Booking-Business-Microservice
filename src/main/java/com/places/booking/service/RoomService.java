@@ -56,6 +56,13 @@ public class RoomService {
     }
 
     public BookingDtos.RoomResponse toResponse(Room room) {
-        return new BookingDtos.RoomResponse(room.getId(), room.getName(), room.getCapacity(), room.getRoomType());
+        return new BookingDtos.RoomResponse(
+                room.getId(),
+                room.getName(),
+                room.getCapacity(),
+                room.getRoomType(),
+                room.getPositionX(),
+                room.getPositionY()
+        );
     }
 }

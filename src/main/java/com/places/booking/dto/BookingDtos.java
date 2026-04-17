@@ -17,7 +17,14 @@ public class BookingDtos {
     ) {
     }
 
-    public record RoomResponse(Long id, String name, Integer capacity, String roomType) {
+    public record RoomResponse(
+            Long id,
+            String name,
+            Integer capacity,
+            String roomType,
+            Double positionX,
+            Double positionY
+    ) {
     }
 
     public record DeskRequest(
