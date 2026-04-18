@@ -14,7 +14,9 @@ public class BookingDtos {
     public record RoomRequest(
             @NotBlank String name,
             @NotNull @Positive Integer capacity,
-            @NotBlank String roomType
+            @NotBlank String roomType,
+            Double positionX,
+            Double positionY
     ) {
     }
 

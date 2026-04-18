@@ -37,6 +37,8 @@ public class RoomService {
         room.setName(request.name());
         room.setCapacity(request.capacity());
         room.setRoomType(request.roomType());
+        room.setPositionX(request.positionX());
+        room.setPositionY(request.positionY());
         return toResponse(roomRepository.save(room));
     }
 
@@ -45,6 +47,12 @@ public class RoomService {
         room.setName(request.name());
         room.setCapacity(request.capacity());
         room.setRoomType(request.roomType());
+        if (request.positionX() != null) {
+            room.setPositionX(request.positionX());
+        }
+        if (request.positionY() != null) {
+            room.setPositionY(request.positionY());
+        }
         return toResponse(roomRepository.save(room));
     }
 
