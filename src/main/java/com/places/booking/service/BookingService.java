@@ -29,19 +29,22 @@ public class BookingService {
     private final TeamRepository teamRepository;
     private final CurrentUserService currentUserService;
     private final LoyaltyService loyaltyService;
+    private final BookingNotificationService bookingNotificationService;
 
     public BookingService(
             BookingRepository bookingRepository,
             RoomRepository roomRepository,
             TeamRepository teamRepository,
             CurrentUserService currentUserService,
-            LoyaltyService loyaltyService
+            LoyaltyService loyaltyService,
+            BookingNotificationService bookingNotificationService
     ) {
         this.bookingRepository = bookingRepository;
         this.roomRepository = roomRepository;
         this.teamRepository = teamRepository;
         this.currentUserService = currentUserService;
         this.loyaltyService = loyaltyService;
+        this.bookingNotificationService = bookingNotificationService;
     }
 
     public PagedResponse<BookingDtos.BookingResponse> findAll(String status, Long userId, Long roomId, int page, int size) {
@@ -72,6 +75,8 @@ public class BookingService {
             throw new IllegalArgumentException("End time must be after start time");
         }
 
+        String requesterUsername = currentUserService.requireUsername();
+
         Room room = roomRepository.findById(request.roomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
         Team team = request.teamId() == null ? null : teamRepository.findById(request.teamId())
@@ -85,7 +90,12 @@ public class BookingService {
         booking.setEndsAt(request.endsAt());
         booking.setStatus(initialStatusForRoom(room));
 
-        return toResponse(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+        if (saved.getStatus() == BookingStatus.PENDING) {
+            bookingNotificationService.sendPendingApprovalNotification(saved, requesterUsername);
+        }
+
+        return toResponse(saved);
     }
 
     /**

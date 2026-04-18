@@ -32,7 +32,13 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/prometheus",
                                 "/error",
-                                "/ws/chat"
+                                "/ws/chat",
+                                "/swagger-ui.html", 
+                                "/swagger-ui/**", 
+                                "/api-docs", 
+                                "/api-docs/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()

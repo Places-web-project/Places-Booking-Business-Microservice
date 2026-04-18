@@ -27,4 +27,20 @@ public class CurrentUserService {
         }
         throw new IllegalArgumentException("Authenticated token does not include a usable userId");
     }
+
+    public String requireUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new IllegalArgumentException("Authentication is required");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof AuthenticatedUser authenticatedUser && authenticatedUser.username() != null && !authenticatedUser.username().isBlank()) {
+            return authenticatedUser.username();
+        }
+        if (principal instanceof String value && !value.isBlank()) {
+            return value;
+        }
+        throw new IllegalArgumentException("Authenticated token does not include a usable username");
+    }
 }

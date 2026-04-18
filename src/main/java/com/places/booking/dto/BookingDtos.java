@@ -2,6 +2,7 @@ package com.places.booking.dto;
 
 import com.places.booking.model.BookingStatus;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -58,7 +59,7 @@ public class BookingDtos {
             @NotNull Long userId,
             @NotNull Long roomId,
             Long teamId,
-            @NotNull @Future LocalDateTime startsAt,
+            @NotNull @FutureOrPresent LocalDateTime startsAt,
             @NotNull @Future LocalDateTime endsAt
     ) {
     }
